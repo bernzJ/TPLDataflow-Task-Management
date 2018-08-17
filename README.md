@@ -1,7 +1,7 @@
 # TPLDataflow-Task-Management
 Create a queue of block encapsuled by throttling and custom consumer. Goal was to enqueue with a max level of parallelism and
 timestamp for late-running tasks. Not sure what the EnsureOrdered property is for, the queue should already be FIFO.
-This does require `System.Threading.Tasks.Dataflow`, which is can be installed by `NUGET`.
+This does require `System.Threading.Tasks.Dataflow` and `Furl http`, which is can be installed by `NUGET`.
 
 ## Limitations:
 The first block and last block(consumer) must have same in/out types.
