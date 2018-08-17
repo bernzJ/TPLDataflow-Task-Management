@@ -63,8 +63,19 @@ namespace TPLDataflow_Task_Management
 
             var FirstBlock = new TransformBlock<ListViewItem, ListViewItem>(T =>
             {
-                T.Status = "Running";
-                return T;
+                try
+                {
+                    T.CTS.Token.ThrowIfCancellationRequested();
+                    T.Status = "Running";
+                    return T;
+
+                }
+                catch (Exception ex)
+                {
+                    T.TaskFailed(ex);
+                    return T;
+                }
+
             }, blockOptions);
 
 
@@ -90,24 +101,25 @@ namespace TPLDataflow_Task_Management
             if (Url.Text == string.Empty) return;
             if (TimeStampComboBox.SelectedItem == null) return;
             var ts = (TimeStampComboBox.SelectedItem as ComboBoxItem).TimeStamp;
-            var t = new Tuple<TimeSpan, ListViewItem>(ts, new ListViewItem() { Id = Ids.ToString(), Url = "https://www.reddit.com/r/CryptoCurrency/comments/97zuoa/daily_discussion_megathread_august_17_2018/", ScheduledAt = $"{ts.Hours}:{ts.Minutes}:{ts.Seconds}", Status = "Waiting Schedule" });
+            var t = new Tuple<TimeSpan, ListViewItem>(ts, new ListViewItem() { Url = Url.Text, ScheduledAt = $"{ts.Hours}:{ts.Minutes}:{ts.Seconds}", Status = "Waiting Schedule" });
             ListViewItems.Add(t.Item2);
+            t.Item2.Id = t.Item2.CurrentTask.Id.ToString();
             BlockScheduler.SendAsync(t);
 
             // Can do tasks continuation.
             t.Item2.CurrentTask.ContinueWith(T =>
             {
-                var lvi = T.Result;
+                
                 switch (T.Status)
                 {
                     case TaskStatus.Canceled:
-                        ListViewItems.Where(l => l.Id == lvi.Id).First().Status = "Cancelled";
+                        ListViewItems.Where(l => l.Id == T.Result.Id).First().Status = "Cancelled";
                         break;
                     case TaskStatus.Faulted:
-                        ListViewItems.Where(l => l.Id == lvi.Id).First().Status = T.Exception.Message;
+                        ListViewItems.Where(l => l.Id == T.Id.ToString()).First().Status = T.Exception.InnerException.Message;
                         break;
                     case TaskStatus.RanToCompletion:
-                        ListViewItems.Where(l => l.Id == lvi.Id).First().Status = "Completed";
+                        ListViewItems.Where(l => l.Id == T.Result.Id).First().Status = "Completed";
                         break;
                 }
             }, TaskScheduler.FromCurrentSynchronizationContext());

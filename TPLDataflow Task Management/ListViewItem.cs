@@ -31,7 +31,7 @@ namespace TPLDataflow_Task_Management
         {
             TCS = new TaskCompletionSource<ListViewItem>();
             CTS = new CancellationTokenSource();
-            CTS.Token.ThrowIfCancellationRequested();
+            
         }
         public void TaskComplete(ListViewItem result)
         {
