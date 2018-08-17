@@ -37,7 +37,10 @@ namespace TPLDataflow_Task_Management
         {
             TCS.SetResult(result);
         }
-
+        public void TaskCanceled()
+        {
+            TCS.SetCanceled();
+        }
         public void TaskFailed(Exception ex)
         {
             TCS.SetException(ex);

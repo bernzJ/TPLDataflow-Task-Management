@@ -20,22 +20,22 @@ namespace TPLDataflow_Task_Management
     }
     public class BlockScheduler<T>
     {
-        private BufferBlock<Tuple<TimeSpan, T>> Queue { get; set; }
+        private BufferBlock<Tuple<TimeSpan, CancellationTokenSource, T>> Queue { get; set; }
         private List<Task> Consumers { get; set; }
         private CancellationTokenSource BlockCTS { get; set; }
 
-        private IPropagatorBlock<Tuple<TimeSpan, T1>, T1> CreateThrottleBlock<T1>(CancellationTokenSource CTS, int MaxPerInterval, int BlockMaxDegreeOfParallelism)
+        private IPropagatorBlock<Tuple<TimeSpan, CancellationTokenSource, T1>, T1> CreateThrottleBlock<T1>(CancellationTokenSource CTS, int MaxPerInterval, int BlockMaxDegreeOfParallelism)
         {
             SemaphoreSlim sem = new SemaphoreSlim(MaxPerInterval, MaxPerInterval);
-            return new TransformBlock<Tuple<TimeSpan, T1>, T1>(async (x) =>
+            return new TransformBlock<Tuple<TimeSpan, CancellationTokenSource, T1>, T1>(async (x) =>
             {
                 await sem.WaitAsync();
-                while (x.Item1 >= DateTime.UtcNow.TimeOfDay && !CTS.Token.IsCancellationRequested)
+                while (x.Item1 >= DateTime.UtcNow.TimeOfDay && !x.Item2.IsCancellationRequested && !CTS.Token.IsCancellationRequested)
                 {
                     await Task.Delay(1000);
                 }
                 sem.Release();
-                return x.Item2;
+                return x.Item3;
             },
                  new ExecutionDataflowBlockOptions
                  {
@@ -61,7 +61,7 @@ namespace TPLDataflow_Task_Management
             var ConsumerOptions = new ExecutionDataflowBlockOptions { BoundedCapacity = BoundedCapacity, MaxDegreeOfParallelism = MaxDegreeOfParallelism, EnsureOrdered = true, CancellationToken = BlockCTS.Token };
             var LinkOptions = new DataflowLinkOptions { PropagateCompletion = true, };
             Consumers = new List<Task>();
-            Queue = new BufferBlock<Tuple<TimeSpan, T>>();
+            Queue = new BufferBlock<Tuple<TimeSpan, CancellationTokenSource, T>>();
 
             var Consumer = new ActionBlock<T>(async TT => await ConsumerAction(TT), ConsumerOptions);
 
@@ -77,12 +77,12 @@ namespace TPLDataflow_Task_Management
                 Consumers.Add(Consumer.Completion);
             }
         }
-        public async Task SendAsync(Tuple<TimeSpan, T> Item)
+        public async Task SendAsync(Tuple<TimeSpan, CancellationTokenSource, T> Item)
         {
             await Queue.SendAsync(Item);
         }
 
-        public async Task SendAsync(IEnumerable<Tuple<TimeSpan, T>> Items)
+        public async Task SendAsync(IEnumerable<Tuple<TimeSpan, CancellationTokenSource, T>> Items)
         {
             foreach (var item in Items)
             {
@@ -98,7 +98,7 @@ namespace TPLDataflow_Task_Management
         public async Task CancelAll()
         {
             BlockCTS.Token.ThrowIfCancellationRequested();
-            await Task.Delay(6000);
+            //await Task.Delay(6000);
             BlockCTS.Cancel();
         }
     }

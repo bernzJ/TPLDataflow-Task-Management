@@ -28,6 +28,10 @@
                 x:Name="CancelContext"
                 Click="CancelContext_Click"
                  />
+                    <MenuItem Header="CancelAll"
+                x:Name="CancelAllContext"
+                Click="CancelAllContext_Click"
+                 />
                 </ContextMenu>
             </ListView.ContextMenu>
         </ListView>
