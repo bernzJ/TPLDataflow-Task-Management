@@ -5,8 +5,49 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TPLDataflow_Task_Management"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="363" Width="540">
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition  Height="5*"/>
+            <RowDefinition  Height="1*"/>
+        </Grid.RowDefinitions>
+        <ListView x:Name="ListViewTasks" Grid.Row="0" ItemsSource="{Binding ListViewItems}">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Id" Width="40" DisplayMemberBinding="{Binding Id}"></GridViewColumn>
+                    <GridViewColumn Header="Status" Width="150" DisplayMemberBinding="{Binding Status}"></GridViewColumn>
+                    <GridViewColumn Header="Scheduled At" Width="150" DisplayMemberBinding="{Binding ScheduledAt}"></GridViewColumn>
+                    <GridViewColumn Header="URL" Width="150" DisplayMemberBinding="{Binding Url}"></GridViewColumn>
+                    <GridViewColumn Header="Title" Width="150" DisplayMemberBinding="{Binding Title}"></GridViewColumn>
+                    <GridViewColumn Header="Description" Width="150" DisplayMemberBinding="{Binding Description}"></GridViewColumn>
+                </GridView>
+            </ListView.View>
+            <ListView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Cancel"
+                x:Name="CancelContext"
+                Click="CancelContext_Click"
+                 />
+                </ContextMenu>
+            </ListView.ContextMenu>
+        </ListView>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="1*" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="Url" Grid.Column="0" Width="auto" Height="34" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="10" />
+            <ComboBox x:Name="TimeStampComboBox" ItemsSource="{Binding ComboBoxItems}" Grid.Column="1" Width="auto" Height="34" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="10" >
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock HorizontalAlignment="Center" Text="{Binding Path=Display}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button x:Name="AddTask" Click="AddTask_Click" Grid.Column="2" VerticalAlignment="Top" HorizontalAlignment="Stretch" Height="34" Width="auto" Margin="10">Add Task</Button>
+        </Grid>
     </Grid>
 </Window>
